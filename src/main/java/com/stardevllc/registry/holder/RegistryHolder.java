@@ -1,5 +1,7 @@
-package com.stardevllc.registry;
+package com.stardevllc.registry.holder;
 
+import com.stardevllc.registry.IRegistry;
+import com.stardevllc.registry.result.SetResult;
 import com.stardevllc.starlib.objects.Holder;
 import com.stardevllc.starlib.objects.key.Key;
 import com.stardevllc.starlib.tuple.pair.Pair;
@@ -45,6 +47,12 @@ public class RegistryHolder<T> implements Holder<Key, T>, Pair<Key, T> {
     
     @Override
     public T setValue(T value) {
-        return registry.set(key, value);
+        return switch (registry.set(key, value)) {
+            case SetResult.AlreadyRegistered<T> ignored -> value;
+            case SetResult.EventCancelled<T> ignored -> throw new UnsupportedOperationException();
+            case SetResult.Frozen<T> ignored -> throw new UnsupportedOperationException();
+            case SetResult.ReplaceNotAllowed<T> ignored -> throw new UnsupportedOperationException();
+            case SetResult.Success<T> v -> v.holder().value();
+        };
     }
 }

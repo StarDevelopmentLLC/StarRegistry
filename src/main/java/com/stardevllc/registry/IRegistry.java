@@ -1,13 +1,17 @@
 package com.stardevllc.registry;
 
 import com.stardevllc.registry.event.*;
+import com.stardevllc.registry.event.EventListener;
+import com.stardevllc.registry.holder.RegistryHolder;
+import com.stardevllc.registry.result.*;
+import com.stardevllc.starlib.event.EventDispatcher;
 import com.stardevllc.starlib.objects.Nameable;
 import com.stardevllc.starlib.objects.key.Key;
 import com.stardevllc.starlib.objects.key.Keyable;
 import com.stardevllc.starlib.objects.key.impl.StringKey;
 
-import java.util.Set;
-import java.util.function.Function;
+import java.util.*;
+import java.util.function.*;
 
 public interface IRegistry<V> extends Iterable<V>, Nameable, Keyable, Function<Key, V> {
     V get(Key key);
@@ -16,7 +20,13 @@ public interface IRegistry<V> extends Iterable<V>, Nameable, Keyable, Function<K
         return get(createKey(key));
     }
     
-    <E extends RegistryEvent<V>> void addListener(Class<E> type, EventListener<V, E> listener);
+    default EventDispatcher getDispatcher() {
+        return EventDispatcher.NOOP;
+    }
+    
+    default <E extends RegistryEvent<V>> void addListener(Class<E> type, EventListener<V, E> listener) {
+        getDispatcher().addListener(listener);
+    }
     
     RegisterResult<V> register(Key key, V object);
     
@@ -24,11 +34,47 @@ public interface IRegistry<V> extends Iterable<V>, Nameable, Keyable, Function<K
         return register(createKey(key, object), object);
     }
     
-    void addRegisterListener(EventListener<V, RegisterEvent<V>> listener);
+    default void addRegisterListener(EventListener<V, RegisterEvent<V>> listener) {
+        getDispatcher().addListener(listener);
+    }
     
-    V set(Key key, V object);
+    default void addSetListener(EventListener<V, SetEvent<V>> listener) {
+        getDispatcher().addListener(listener);
+    }
+    
+    SetResult<V> set(Key key, V object);
     
     int size();
+    
+    default boolean isFrozen() {
+        return false;
+    }
+    
+    default FreezeResult<V> freeze() {
+        return new FreezeResult.Unsupported<>(this);
+    }
+    
+    default void addFreezeListener(EventListener<V, FreezeEvent<V>> listener) {
+        getDispatcher().addListener(listener);
+    }
+    
+    default UnfreezeResult<V> unfreeze() {
+        return new UnfreezeResult.Unsupported<>(this);
+    }
+    
+    default void addUnfreezeListener(EventListener<V, UnfreezeEvent<V>> listener) {
+        getDispatcher().addListener(listener);
+    }
+    
+    UnregisterResult<V> unregister(Key key);
+    
+    default UnregisterResult<V> unregister(String key) {
+        return unregister(createKey(key));
+    }
+    
+    default void addUnregisterListener(EventListener<V, UnregisterEvent<V>> listener) {
+        getDispatcher().addListener(listener);
+    }
     
     default boolean isEmpty() {
         return size() == 0;
@@ -37,6 +83,10 @@ public interface IRegistry<V> extends Iterable<V>, Nameable, Keyable, Function<K
     default boolean isNotEmpty() {
         return size() > 0;
     }
+    
+    Set<Map.Entry<Key, V>> entrySet();
+    
+    Set<RegistryHolder<V>> holderSet();
     
     Set<RegistryFlag> getFlags();
     
@@ -63,6 +113,22 @@ public interface IRegistry<V> extends Iterable<V>, Nameable, Keyable, Function<K
         return new StringKey(k);
     }
     
+    boolean containsKey(Key key);
+    
+    boolean containsValue(V value);
+    
+    void forEach(BiConsumer<Key, V> consumer);
+    
+    void forEachKey(Consumer<Key> consumer);
+    
+    void forEachValue(Consumer<V> consumer);
+    
+    void forEachEntry(Consumer<Map.Entry<Key, V>> consumer);
+    
+    Set<Key> keySet();    
+    
+    Collection<V> values();
+    
     @Override
     default V apply(Key key) {
         return get(key);
@@ -76,5 +142,9 @@ public interface IRegistry<V> extends Iterable<V>, Nameable, Keyable, Function<K
     @Override
     default Key getKey() {
         return StringKey.EMPTY;
+    }
+    
+    static char separator() {
+        return '/';
     }
 }

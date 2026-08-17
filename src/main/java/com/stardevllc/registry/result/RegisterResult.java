@@ -1,5 +1,7 @@
-package com.stardevllc.registry;
+package com.stardevllc.registry.result;
 
+import com.stardevllc.registry.IRegistry;
+import com.stardevllc.registry.holder.RegistryHolder;
 import com.stardevllc.starlib.objects.key.Key;
 
 public sealed interface RegisterResult<V> {
@@ -31,6 +33,10 @@ public sealed interface RegisterResult<V> {
     }
     
     record EventCancelled<V>(IRegistry<V> registry, Key key, V object, V existing) implements RegisterResult<V> {
+        
+    }
+    
+    record Frozen<V>(IRegistry<V> registry, Key key, V object) implements RegisterResult<V> {
         
     }
     

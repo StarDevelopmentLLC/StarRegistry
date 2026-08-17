@@ -19,6 +19,16 @@ public enum RegistryFlag {
     REPLACING,
     
     /**
+     * This flag being present means that values can be unregistered from the registry
+     */
+    UNREGISTERING,
+    
+    /**
+     * This flag being present allows creation of child registries
+     */
+    CHILD_REGISTRIES,
+    
+    /**
      * This flag being present means that the bulk clear action can be performed
      */
     CLEARING,
