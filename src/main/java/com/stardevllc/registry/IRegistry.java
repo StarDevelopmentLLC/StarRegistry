@@ -6,8 +6,7 @@ import com.stardevllc.registry.holder.RegistryHolder;
 import com.stardevllc.registry.result.*;
 import com.stardevllc.starlib.event.EventDispatcher;
 import com.stardevllc.starlib.objects.Nameable;
-import com.stardevllc.starlib.objects.key.Key;
-import com.stardevllc.starlib.objects.key.Keyable;
+import com.stardevllc.starlib.objects.key.*;
 import com.stardevllc.starlib.objects.key.impl.StringKey;
 
 import java.util.*;
@@ -46,8 +45,24 @@ public interface IRegistry<V> extends Iterable<V>, Nameable, Keyable, Function<K
     
     int size();
     
+    default Key getFullyQualifiedKey() {
+        if (getParent() == null) {
+            return getKey();
+        }
+        
+        return Keys.of(getParent().getFullyQualifiedKey(), IRegistry.separator(), getKey());
+    }
+    
     default boolean isFrozen() {
         return false;
+    }
+    
+    default <CV extends V> IRegistry<CV> createChild(Key key, String name) {
+        return null;
+    }
+    
+    default IRegistry<? super V> getParent() {
+        return null;
     }
     
     default FreezeResult<V> freeze() {
@@ -82,6 +97,14 @@ public interface IRegistry<V> extends Iterable<V>, Nameable, Keyable, Function<K
     
     default boolean isNotEmpty() {
         return size() > 0;
+    }
+    
+    default IRegisterer<V> createRegisterer(Key key, String name) {
+        throw new UnsupportedOperationException();
+    }
+    
+    default IDeferredRegisterer<V> createDeferredRegisterer(Key key, String name) {
+        throw new UnsupportedOperationException();
     }
     
     Set<Map.Entry<Key, V>> entrySet();

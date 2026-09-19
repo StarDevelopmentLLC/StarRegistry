@@ -15,7 +15,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'com.stardevllc:StarLib:0.25.0'
+    implementation 'com.stardevllc:StarLib:0.25.0'
 }
 
 publishing {

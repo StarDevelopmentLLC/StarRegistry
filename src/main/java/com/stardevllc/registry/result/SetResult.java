@@ -12,7 +12,7 @@ public sealed interface SetResult<V> {
     
     record Success<V>(RegistryHolder<V> holder) implements SetResult<V> {
         public IRegistry<V> registry() {
-            return holder.getRegistry();
+            return holder.registry();
         }
         
         public Key key() {
@@ -23,7 +23,7 @@ public sealed interface SetResult<V> {
     record AlreadyRegistered<V>(RegistryHolder<V> holder) implements SetResult<V> {
         @Override
         public IRegistry<V> registry() {
-            return holder.getRegistry();
+            return holder.registry();
         }
         
         @Override

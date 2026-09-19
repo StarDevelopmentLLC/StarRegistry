@@ -6,28 +6,19 @@ import com.stardevllc.starlib.objects.Holder;
 import com.stardevllc.starlib.objects.key.Key;
 import com.stardevllc.starlib.tuple.pair.Pair;
 
+import java.util.Objects;
+
 /**
  * Represents a holder of an item in a Registry
- *
- * @param <T> The object type
+ * @param <T> The Object Type
  */
 public class RegistryHolder<T> implements Holder<Key, T>, Pair<Key, T> {
-    
     private final IRegistry<T> registry;
     private final Key key;
     
     public RegistryHolder(IRegistry<T> registry, Key key) {
         this.registry = registry;
         this.key = key;
-    }
-    
-    public IRegistry<T> getRegistry() {
-        return registry;
-    }
-    
-    @Override
-    public Key key() {
-        return key;
     }
     
     @Override
@@ -55,4 +46,35 @@ public class RegistryHolder<T> implements Holder<Key, T>, Pair<Key, T> {
             case SetResult.Success<T> v -> v.holder().value();
         };
     }
+    
+    public IRegistry<T> registry() {
+        return registry;
+    }
+    
+    @Override
+    public Key key() {
+        return key;
+    }
+    
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) return true;
+        if (obj == null || obj.getClass() != this.getClass()) return false;
+        var that = (RegistryHolder) obj;
+        return Objects.equals(this.registry, that.registry) &&
+                Objects.equals(this.key, that.key);
+    }
+    
+    @Override
+    public int hashCode() {
+        return Objects.hash(registry, key);
+    }
+    
+    @Override
+    public String toString() {
+        return "RegistryHolder[" +
+                "registry=" + registry + ", " +
+                "key=" + key + ']';
+    }
+    
 }

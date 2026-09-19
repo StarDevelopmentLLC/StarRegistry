@@ -1,5 +1,7 @@
 package com.stardevllc.registry;
 
+import com.stardevllc.starlib.objects.key.Key;
+
 public enum RegistryFlag {
     
     /**
@@ -24,11 +26,6 @@ public enum RegistryFlag {
     UNREGISTERING,
     
     /**
-     * This flag being present allows creation of child registries
-     */
-    CHILD_REGISTRIES,
-    
-    /**
      * This flag being present means that the bulk clear action can be performed
      */
     CLEARING,
@@ -39,12 +36,12 @@ public enum RegistryFlag {
     CHECK_PARTIAL_IN_GET,
     
     /**
-     * This being present means that the current registry's key is added to the full path of a registered item to the parent
+     * This flag being present means that {@link IRegisterer}s created by the {@link IRegistry#createRegisterer(Key, String)} methods can bypass the frozen flag
      */
-    APPEND_KEY_TO_OBJECT_TO_PARENT,
+    ALLOW_REGISTERERS_BYPASS_FROZEN,
     
     /**
-     * This being present means that the registration to this registry will fail on parent registration failure
+     * This flag being present means that {@link IRegisterer}s created by the {@link IRegistry#createRegisterer(Key, String)} methods can bypass the replacing flag
      */
-    FAIL_ON_PARENT_REGISTER_FAILURE
+    ALLOW_REGISTERERS_BYPASS_REPLACING
 }

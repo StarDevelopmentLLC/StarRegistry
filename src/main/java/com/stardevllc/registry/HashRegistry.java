@@ -1,14 +1,13 @@
 package com.stardevllc.registry;
 
 import com.stardevllc.registry.event.*;
+import com.stardevllc.registry.holder.DeferredHolder;
 import com.stardevllc.registry.holder.RegistryHolder;
 import com.stardevllc.registry.result.*;
-import com.stardevllc.starlib.objects.key.Key;
-import com.stardevllc.starlib.objects.key.Keyable;
+import com.stardevllc.starlib.objects.key.*;
 
 import java.util.*;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
+import java.util.function.*;
 
 /**
  * This is a full implementation of the {@link IRegistry} class. It is not required to use it though
@@ -17,17 +16,19 @@ import java.util.function.Consumer;
  */
 public class HashRegistry<V> implements IRegistry<V> {
     
-    private final Key key;
-    private final String name;
+    protected final Key key;
+    protected final String name;
     
-    private final Map<Key, V> backingMap = new HashMap<>();
-    private final Map<Key, RegistryHolder<V>> holders = new HashMap<>();
+    protected final Map<Key, V> backingMap = new HashMap<>();
+    protected final Map<Key, RegistryHolder<V>> holders = new HashMap<>();
     
-    private final RegistryDispatcher dispatcher = new RegistryDispatcher();
+    protected final RegistryDispatcher dispatcher = new RegistryDispatcher();
     
-    private final Set<RegistryFlag> flags = EnumSet.noneOf(RegistryFlag.class);
+    protected final Set<RegistryFlag> flags = EnumSet.noneOf(RegistryFlag.class);
     
-    private boolean frozen;
+    protected final Map<Key, Child<V>> childRegistries = new HashMap<>();
+    
+    protected boolean frozen;
     
     public HashRegistry() {
         this(Key.EMPTY, "");
@@ -43,6 +44,256 @@ public class HashRegistry<V> implements IRegistry<V> {
         return backingMap.get(key);
     }
     
+    private final class Registerer implements IRegisterer<V> {
+        
+        private final Key key;
+        private final String name;
+        private final Map<Key, RegistryHolder<V>> holders = new HashMap<>();
+        
+        public Registerer(Key key, String name) {
+            this.key = key;
+            this.name = name;
+        }
+        
+        @Override
+        public RegistryHolder<V> register(Key key, V object) {
+            if (isFrozen() && !hasFlag(RegistryFlag.ALLOW_REGISTERERS_BYPASS_FROZEN)) {
+                throw new UnsupportedOperationException();
+            }
+            
+            V existing = backingMap.get(key);
+            
+            if (Objects.equals(object, existing)) {
+                return holders.get(key);
+            } else if (existing != null && !hasFlag(RegistryFlag.REPLACING) && !hasFlag(RegistryFlag.ALLOW_REGISTERERS_BYPASS_REPLACING)) {
+                throw new UnsupportedOperationException();
+            }
+            
+            Key fullKey = Keys.of(getKey(), IRegistry.separator(), key);
+            
+            RegistryHolder<V> holder = new RegistryHolder<>(HashRegistry.this, fullKey);
+            backingMap.put(fullKey, object);
+            HashRegistry.this.holders.put(fullKey, holder);
+            this.holders.put(key, holder);
+            
+            if (object instanceof Keyable keyable) {
+                if (keyable.supportsSettingKey()) {
+                    keyable.setKey(key);
+                }
+            }
+            
+            return holder;
+        }
+        
+        @Override
+        public IRegistry<V> getRegistry() {
+            return HashRegistry.this;
+        }
+        
+        private final class EntryItr implements Iterator<RegistryHolder<V>> {
+            
+            private final Iterator<RegistryHolder<V>> backingIterator;
+            
+            public EntryItr() {
+                this.backingIterator = holders.values().iterator();
+            }
+            
+            @Override
+            public boolean hasNext() {
+                return backingIterator.hasNext();
+            }
+            
+            @Override
+            public RegistryHolder<V> next() {
+                return backingIterator.next();
+            }
+        }
+        
+        private final class Entries extends AbstractCollection<RegistryHolder<V>> {
+            
+            @Override
+            public Iterator<RegistryHolder<V>> iterator() {
+                return new Registerer.EntryItr();
+            }
+            
+            @Override
+            public int size() {
+                return holders.size();
+            }
+        }
+        
+        @Override
+        public Collection<RegistryHolder<V>> getEntries() {
+            return new Entries();
+        }
+        
+        @Override
+        public String getName() {
+            return name;
+        }
+        
+        @Override
+        public Key getKey() {
+            return key;
+        }
+        
+        @Override
+        public Key createKey(String k, V value) {
+            return HashRegistry.this.createKey(k, value);
+        }
+        
+        @Override
+        public Key createKey(String k) {
+            return HashRegistry.this.createKey(k);
+        }
+    }
+    
+    public IRegisterer<V> createRegisterer(Key key, String name) {
+        return new Registerer(key, name);
+    }
+    
+    private final class DeferredRegisterer implements IDeferredRegisterer<V> {
+        
+        private final Key key;
+        private final String name;
+        private final Map<Key, DeferredHolder<V>> holders = new HashMap<>();
+        private final Map<Key, RegisterResult<V>> results = new HashMap<>();
+        
+        private boolean hasRegisteredEntries;
+        
+        public DeferredRegisterer(Key key, String name) {
+            this.key = key;
+            this.name = name;
+        }
+        
+        @Override
+        public DeferredHolder<V> register(Key key, Supplier<V> supplier) {
+            if (hasRegisteredEntries) {
+                throw new IllegalStateException("Cannot register new entries when a DeferredRegister has already registered entries");
+            }
+            
+            if (holders.containsKey(key)) {
+                return holders.get(key);
+            }
+            
+            DeferredHolder<V> holder = new DeferredHolder<>(HashRegistry.this, key, supplier);
+            this.holders.put(key, holder);
+            return holder;
+        }
+        
+        @Override
+        public IRegistry<V> getRegistry() {
+            return HashRegistry.this;
+        }
+        
+        @Override
+        public void registerEntries() {
+            if (this.hasRegisteredEntries) {
+                throw new IllegalStateException("Already Registered the entries");
+            }
+            
+            for (Map.Entry<Key, DeferredHolder<V>> entry : this.holders.entrySet()) {
+                Key key = entry.getKey();
+                DeferredHolder<V> holder = entry.getValue();
+                V object = holder.getSupplier().get();
+                if (isFrozen() && !hasFlag(RegistryFlag.ALLOW_REGISTERERS_BYPASS_FROZEN)) {
+                    results.put(key, new RegisterResult.Frozen<>(HashRegistry.this, key, object));
+                    continue;
+                }
+                
+                V existing = backingMap.get(key);
+                
+                if (Objects.equals(object, existing)) {
+                    results.put(key, new RegisterResult.AlreadyRegistered<>(holder));
+                    continue;
+                } else if (existing != null && !hasFlag(RegistryFlag.REPLACING) && !hasFlag(RegistryFlag.ALLOW_REGISTERERS_BYPASS_REPLACING)) {
+                    results.put(key, new RegisterResult.ReplaceNotAllowed<>(HashRegistry.this, key, object, existing));
+                    continue;
+                }
+                
+                Key fullKey = Keys.of(getKey(), IRegistry.separator(), key);
+                
+                backingMap.put(fullKey, object);
+                HashRegistry.this.holders.put(fullKey, holder);
+                
+                if (object instanceof Keyable keyable) {
+                    if (keyable.supportsSettingKey()) {
+                        keyable.setKey(fullKey);
+                    }
+                }
+                
+                results.put(key, new RegisterResult.Success<>(holder));
+            }
+            
+            this.hasRegisteredEntries = true;
+        }
+        
+        private final class EntryItr implements Iterator<DeferredHolder<V>> {
+            
+            private final Iterator<DeferredHolder<V>> backingIterator;
+            
+            public EntryItr() {
+                this.backingIterator = holders.values().iterator();
+            }
+            
+            @Override
+            public boolean hasNext() {
+                return backingIterator.hasNext();
+            }
+            
+            @Override
+            public DeferredHolder<V> next() {
+                return backingIterator.next();
+            }
+        }
+        
+        private final class Entries extends AbstractCollection<DeferredHolder<V>> {
+            
+            @Override
+            public Iterator<DeferredHolder<V>> iterator() {
+                return new DeferredRegisterer.EntryItr();
+            }
+            
+            @Override
+            public int size() {
+                return holders.size();
+            }
+        }
+        
+        @Override
+        public Collection<DeferredHolder<V>> getEntries() {
+            return new Entries();
+        }
+        
+        @Override
+        public RegisterResult<V> getResult(Key key) {
+            return results.get(key);
+        }
+        
+        @Override
+        public Collection<RegisterResult<V>> getResults() {
+            return List.of();
+        }
+        
+        @Override
+        public Key createKey(String k) {
+            return HashRegistry.this.createKey(k);
+        }
+        
+        public Key getKey() {
+            return key;
+        }
+        
+        public String getName() {
+            return name;
+        }
+    }
+    
+    @Override
+    public IDeferredRegisterer<V> createDeferredRegisterer(Key key, String name) {
+        return new DeferredRegisterer(key, name);
+    }
+    
     @Override
     public RegisterResult<V> register(Key key, V object) {
         if (isFrozen()) {
@@ -53,7 +304,7 @@ public class HashRegistry<V> implements IRegistry<V> {
         
         if (Objects.equals(object, existing)) {
             return new RegisterResult.AlreadyRegistered<>(holders.get(key));
-        } else if (!hasFlag(RegistryFlag.REPLACING)) {
+        } else if (existing != null && !hasFlag(RegistryFlag.REPLACING)) {
             return new RegisterResult.ReplaceNotAllowed<>(this, key, object, existing);
         }
         
@@ -86,7 +337,7 @@ public class HashRegistry<V> implements IRegistry<V> {
         
         if (Objects.equals(object, existing)) {
             return new SetResult.AlreadyRegistered<>(holders.get(key));
-        } else if (!hasFlag(RegistryFlag.REPLACING)) {
+        } else if (existing != null && !hasFlag(RegistryFlag.REPLACING)) {
             return new SetResult.ReplaceNotAllowed<>(this, key, object, existing);
         }
         
@@ -137,7 +388,11 @@ public class HashRegistry<V> implements IRegistry<V> {
     
     @Override
     public int size() {
-        return this.backingMap.size();
+        int size = this.backingMap.size();
+        for (IRegistry<V> value : this.childRegistries.values()) {
+            size += value.size();
+        }
+        return size;
     }
     
     @Override
@@ -242,23 +497,110 @@ public class HashRegistry<V> implements IRegistry<V> {
         entrySet().forEach(consumer);
     }
     
-    private class KeyItr implements Iterator<Key> {
+    @Override
+    public <CV extends V> IRegistry<CV> createChild(Key key, String name) {
+        Child<CV> child = new Child<CV>(this, key, name);
+        this.childRegistries.put(key, (Child<V>) child);
+        return child;
+    }
+    
+    protected final class Child<CV extends V> extends HashRegistry<CV> {
         
-        private final Iterator<Key> iterator = backingMap.keySet().iterator();
+        private final IRegistry<? super CV> parent;
+        
+        public Child(IRegistry<? super CV> parent, Key key, String name) {
+            super(key, name);
+            this.parent = parent;
+        }
+        
+        @Override
+        public IRegistry<? super CV> getParent() {
+            return parent;
+        }
+        
+//        @Override
+//        public Key getKey() {
+//            if (parent != null) {
+//                return Keys.of(parent.getKey(), IRegistry.separator(), key);
+//            }
+//            
+//            return key;
+//        }
+        
+        @Override
+        public boolean hasFlag(RegistryFlag flag) {
+            return super.hasFlag(flag) || HashRegistry.this.hasFlag(flag);
+        }
+        
+        @Override
+        public Set<RegistryFlag> getFlags() {
+            Set<RegistryFlag> flags = EnumSet.noneOf(RegistryFlag.class);
+            flags.addAll(super.getFlags());
+            flags.addAll(HashRegistry.this.getFlags());
+            return flags;
+        }
+        
+        @Override
+        public String toString() {
+            return "Child{" +
+                    "key=" + key +
+                    ", name='" + name + '\'' +
+                    '}';
+        }
+    }
+    
+    private class KeyItr implements Iterator<Key> {
+        private final Deque<HashRegistry<V>> registryStack = new ArrayDeque<>(List.of(HashRegistry.this));
+        private Iterator<Key> currentKeyIterator;
+        private final Deque<Key> keyStack = new ArrayDeque<>();
+        
+        private void advance() {
+            if (registryStack.isEmpty()) {
+                return;
+            }
+            
+            if (currentKeyIterator != null && !currentKeyIterator.hasNext()) {
+                keyStack.pop();
+            }
+            
+            while ((currentKeyIterator == null || !currentKeyIterator.hasNext()) && !registryStack.isEmpty()) {
+                HashRegistry<V> currentRegistry = registryStack.pop();
+                keyStack.push(currentRegistry.getKey());
+                this.currentKeyIterator = currentRegistry.backingMap.keySet().iterator();
+                
+                for (Child<V> child : currentRegistry.childRegistries.values()) {
+                    registryStack.push(child);
+                }
+            }
+        }
+        
+        { advance(); }
         
         @Override
         public boolean hasNext() {
-            return iterator.hasNext();
+            return currentKeyIterator != null && currentKeyIterator.hasNext();
         }
         
         @Override
         public Key next() {
-            return iterator.next();
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
+            
+            StringBuilder sb = new StringBuilder();
+            Iterator<Key> iter = keyStack.descendingIterator();
+            while (iter.hasNext()) {
+                Key key = iter.next();
+                sb.append(key).append(IRegistry.separator());
+            }
+            
+            Key key = Keys.of(sb.toString(), currentKeyIterator.next());
+            advance();
+            return key;
         }
     }
     
     private class KeySet extends AbstractSet<Key> {
-        
         @Override
         public Iterator<Key> iterator() {
             return new KeyItr();
@@ -266,7 +608,7 @@ public class HashRegistry<V> implements IRegistry<V> {
         
         @Override
         public int size() {
-            return backingMap.size();
+            return HashRegistry.this.size();
         }
     }
     
@@ -277,15 +619,21 @@ public class HashRegistry<V> implements IRegistry<V> {
     
     private class ValueItr implements Iterator<V> {
         
-        private final Iterator<Map.Entry<Key, V>> iterator;
-        
-        public ValueItr() {
-            this.iterator = backingMap.entrySet().iterator();
-        }
+        private Iterator<Map.Entry<Key, V>> iterator = backingMap.entrySet().iterator();
+        private final Iterator<Map.Entry<Key, Child<V>>> childIterator = childRegistries.entrySet().iterator();
         
         @Override
         public boolean hasNext() {
-            return iterator.hasNext();
+            if (iterator.hasNext()) {
+                return true;
+            }
+            
+            if (childIterator.hasNext()) {
+                iterator = childIterator.next().getValue().entrySet().iterator();
+                return hasNext();
+            }
+            
+            return false;
         }
         
         @Override
@@ -300,7 +648,7 @@ public class HashRegistry<V> implements IRegistry<V> {
         }
         
         public int size() {
-            return backingMap.size();
+            return HashRegistry.this.size();
         }
     }
     
@@ -314,22 +662,52 @@ public class HashRegistry<V> implements IRegistry<V> {
         return new ValueItr();
     }
     
-    private class EntryItr implements Iterator<Map.Entry<Key, V>> {
-        
-        private final Iterator<Map.Entry<Key, V>> iterator;
-        
-        public EntryItr() {
-            this.iterator = backingMap.entrySet().iterator();
+    private record ItrEntry<V>(Key newKey, Map.Entry<Key, V> backingEntry) implements Map.Entry<Key, V> {
+        @Override
+        public Key getKey() {
+            return newKey;
         }
         
         @Override
+        public V getValue() {
+            return backingEntry.getValue();
+        }
+        
+        @Override
+        public V setValue(V value) {
+            return backingEntry.setValue(value);
+        }
+    }
+    
+    private class EntryItr implements Iterator<Map.Entry<Key, V>> {
+        
+        private Iterator<Map.Entry<Key, V>> iterator = backingMap.entrySet().iterator();
+        private final Iterator<Map.Entry<Key, Child<V>>> childIterator = childRegistries.entrySet().iterator();
+        private Map.Entry<Key, Child<V>> childEntry;
+        
+        @Override
         public boolean hasNext() {
-            return iterator.hasNext();
+            if (iterator.hasNext()) {
+                return true;
+            }
+            
+            if (childIterator.hasNext()) {
+                childEntry = childIterator.next();
+                iterator = childEntry.getValue().entrySet().iterator();
+                return hasNext();
+            }
+            
+            return false;
         }
         
         @Override
         public Map.Entry<Key, V> next() {
-            return iterator.next();
+            if (childEntry == null) {
+                return iterator.next();
+            }
+            
+            Map.Entry<Key, V> entry = iterator.next();
+            return new ItrEntry<>(Keys.of(childEntry.getValue().getKey(), IRegistry.separator(), entry.getKey()), entry);
         }
     }
     
@@ -341,7 +719,7 @@ public class HashRegistry<V> implements IRegistry<V> {
         
         @Override
         public int size() {
-            return backingMap.size();
+            return HashRegistry.this.size();
         }
     }
     
@@ -352,20 +730,26 @@ public class HashRegistry<V> implements IRegistry<V> {
     
     private class HolderItr implements Iterator<RegistryHolder<V>> {
         
-        private final Iterator<Map.Entry<Key, RegistryHolder<V>>> iterator;
-        
-        public HolderItr() {
-            this.iterator = holders.entrySet().iterator();
-        }
+        private Iterator<RegistryHolder<V>> iterator = holders.values().iterator();
+        private final Iterator<Map.Entry<Key, Child<V>>> childIterator = childRegistries.entrySet().iterator();
         
         @Override
         public boolean hasNext() {
-            return this.iterator.hasNext();
+            if (iterator.hasNext()) {
+                return true;
+            }
+            
+            if (childIterator.hasNext()) {
+                iterator = childIterator.next().getValue().holderSet().iterator();
+                return hasNext();
+            }
+            
+            return false;
         }
         
         @Override
         public RegistryHolder<V> next() {
-            return iterator.next().getValue();
+            return iterator.next();
         }
     }
     
@@ -377,12 +761,20 @@ public class HashRegistry<V> implements IRegistry<V> {
         
         @Override
         public int size() {
-            return holders.size();
+            return HashRegistry.this.size();
         }
     }
     
     @Override
     public Set<RegistryHolder<V>> holderSet() {
         return new HolderSet();
+    }
+    
+    @Override
+    public String toString() {
+        return "HashRegistry{" +
+                "key=" + key +
+                ", name='" + name + '\'' +
+                '}';
     }
 }
