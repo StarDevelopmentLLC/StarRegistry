@@ -10,6 +10,42 @@ public sealed interface RegisterResult<V> {
     
     Key key();
     
+    default RegistryHolder<V> getHolder() {
+        return switch (this) {
+            case RegisterResult.AlreadyRegistered<V> v -> v.holder();
+            case RegisterResult.Success<V> v -> v.holder();
+            default -> null;
+        };
+    }
+    
+    default Success<V> asSuccess() {
+        return (Success<V>) this;
+    }
+    
+    default boolean isSuccess() {
+        return this instanceof RegisterResult.Success<V> || this instanceof RegisterResult.AlreadyRegistered<V>;
+    }
+    
+    default boolean isFail() {
+        return !isSuccess();
+    }
+    
+    default AlreadyRegistered<V> asAlreadyRegistered() {
+        return (AlreadyRegistered<V>) this;
+    }
+    
+    default EventCancelled<V> asEventCancelled() {
+        return (EventCancelled<V>) this;
+    }
+    
+    default Frozen<V> asFrozen() {
+        return (Frozen<V>) this;
+    }
+    
+    default ReplaceNotAllowed<V> asReplaceNotAllowed() {
+        return (ReplaceNotAllowed<V>) this;
+    }
+    
     record Success<V>(RegistryHolder<V> holder) implements RegisterResult<V> {
         public IRegistry<V> registry() {
             return holder.registry();
