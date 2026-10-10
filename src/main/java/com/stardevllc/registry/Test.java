@@ -1,5 +1,6 @@
 package com.stardevllc.registry;
 
+import com.stardevllc.registry.result.RegisterResult;
 import com.stardevllc.starlib.objects.key.Key;
 import com.stardevllc.starlib.objects.key.Keys;
 
@@ -64,7 +65,7 @@ public final class Test {
         
         IRegistry<PhoneAsset> phoneRegistry = techRegistry.createChild(Keys.of("phones"), "Phones");
         
-        laptopAssets.register("1", new LaptopAsset("1", "Lenovo", "ThinkPad"));
+        laptopAssets.register("1", new LaptopAsset("1", "Lenovo", "ThinkPad")).key();
         desktopAssets.register("1", new DesktopAsset("1", "Dell", "123"));
         
         phoneRegistry.register("1", new PhoneAsset("1", "Apple", "iPhone"));

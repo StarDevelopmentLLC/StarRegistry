@@ -41,7 +41,22 @@ public class HashRegistry<V> implements IRegistry<V> {
     
     @Override
     public V get(Key key) {
-        return backingMap.get(key);
+        V v = backingMap.get(key);
+        
+        if (v == null && !childRegistries.isEmpty()) {
+            String[] keySplit = key.toString().split(IRegistry.separator() + "");
+            String[] newKeyParts = new String[keySplit.length - 1];
+            System.arraycopy(keySplit, 1, newKeyParts, 0, keySplit.length);
+            Key newKey = Keys.of(newKeyParts);
+            Key childKey = Keys.of(keySplit[0]);
+            for (Map.Entry<Key, Child<V>> entry : this.childRegistries.entrySet()) {
+                if (entry.getKey().equals(childKey)) {
+                    return entry.getValue().get(newKey);
+                }
+            }
+        }
+        
+        return v;
     }
     
     private final class Registerer implements IRegisterer<V> {
