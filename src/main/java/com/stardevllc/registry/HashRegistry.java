@@ -71,12 +71,14 @@ public class HashRegistry<V> implements IRegistry<V> {
         }
         
         @Override
-        public RegistryHolder<V> register(Key key, V object) {
+        public RegistryHolder<V> register(Key key, Function<Key, V> function) {
             if (isFrozen() && !hasFlag(RegistryFlag.ALLOW_REGISTERERS_BYPASS_FROZEN)) {
                 throw new UnsupportedOperationException();
             }
             
             V existing = backingMap.get(key);
+            
+            V object = function.apply(key);
             
             if (Objects.equals(object, existing)) {
                 return holders.get(key);

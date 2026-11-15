@@ -5,10 +5,8 @@ import com.stardevllc.registry.holder.RegistryHolder;
 import com.stardevllc.registry.result.RegisterResult;
 import com.stardevllc.starlib.objects.key.Key;
 import com.stardevllc.starlib.objects.key.Keys;
-import com.stardevllc.starlib.registry.RegistryObject;
 
 import java.util.Collection;
-import java.util.Map;
 import java.util.function.Supplier;
 
 public interface IDeferredRegisterer<V> {

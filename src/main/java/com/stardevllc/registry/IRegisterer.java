@@ -7,10 +7,15 @@ import com.stardevllc.starlib.objects.key.Keyable;
 import com.stardevllc.starlib.objects.key.impl.StringKey;
 
 import java.util.Collection;
+import java.util.function.Function;
 
 public interface IRegisterer<V> extends Nameable, Keyable {
     
-    RegistryHolder<V> register(Key key, V object);
+    RegistryHolder<V> register(Key key, Function<Key, V> function);
+    
+    default RegistryHolder<V> register(Key key, V object) {
+        return register(key, k -> object);
+    }
     
     default RegistryHolder<V> register(String key, V object) {
         return register(createKey(key, object), object);

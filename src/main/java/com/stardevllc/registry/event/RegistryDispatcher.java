@@ -1,7 +1,6 @@
 package com.stardevllc.registry.event;
 
 import com.stardevllc.starlib.event.EventDispatcher;
-import com.stardevllc.starlib.registry.IRegistry;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +20,7 @@ public class RegistryDispatcher implements EventDispatcher {
     
     @Override
     public void addListener(Object listener) {
-        if (listener instanceof IRegistry.Listener<?, ?> l) {
+        if (listener instanceof EventListener<?, ?> l) {
             listeners.add((EventListener<?, RegistryEvent<?>>) l);
         }
     }
