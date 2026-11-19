@@ -91,11 +91,9 @@ public class HashRegistry<V> implements IRegistry<V> {
                 throw new UnsupportedOperationException();
             }
             
-            Key fullKey = Keys.of(getKey(), IRegistry.separator(), key);
-            
-            RegistryHolder<V> holder = new RegistryHolder<>(HashRegistry.this, fullKey);
-            backingMap.put(fullKey, object);
-            HashRegistry.this.holders.put(fullKey, holder);
+            RegistryHolder<V> holder = new RegistryHolder<>(HashRegistry.this, key);
+            backingMap.put(key, object);
+            HashRegistry.this.holders.put(key, holder);
             this.holders.put(key, holder);
             
             if (object instanceof Keyable keyable) {
@@ -249,14 +247,12 @@ public class HashRegistry<V> implements IRegistry<V> {
                     continue;
                 }
                 
-                Key fullKey = Keys.of(getKey(), IRegistry.separator(), key);
-                
-                backingMap.put(fullKey, object);
-                HashRegistry.this.holders.put(fullKey, holder);
+                backingMap.put(key, object);
+                HashRegistry.this.holders.put(key, holder);
                 
                 if (object instanceof Keyable keyable) {
                     if (keyable.supportsSettingKey()) {
-                        keyable.setKey(fullKey);
+                        keyable.setKey(key);
                     }
                 }
                 
@@ -556,18 +552,16 @@ public class HashRegistry<V> implements IRegistry<V> {
             return parent;
         }
         
-//        @Override
-//        public Key getKey() {
-//            if (parent != null) {
-//                return Keys.of(parent.getKey(), IRegistry.separator(), key);
-//            }
-//            
-//            return key;
-//        }
+        
         
         @Override
         public boolean hasFlag(RegistryFlag flag) {
             return super.hasFlag(flag) || HashRegistry.this.hasFlag(flag);
+        }
+        
+        @Override
+        public boolean isFrozen() {
+            return super.isFrozen() || HashRegistry.this.isFrozen();
         }
         
         @Override
