@@ -114,8 +114,32 @@ public interface IRegistry<V> extends Iterable<V>, Nameable, Keyable, Function<K
         throw new UnsupportedOperationException();
     }
     
+    default IRegister<V> createRegister(String key, String name) {
+        return createRegister(createKey(key), name);
+    }
+    
+    default IRegister<V> createRegister(String name) {
+        return createRegister(createKey(name), name);    
+    }
+    
+    default IRegister<V> createRegister() {
+        return createRegister(Key.EMPTY, "");
+    }
+    
     default IDeferredRegister<V> createDeferredRegister(Key key, String name) {
         throw new UnsupportedOperationException();
+    }
+    
+    default IDeferredRegister<V> createDeferredRegister(String key, String name) {
+        return createDeferredRegister(createKey(key), name);
+    }
+    
+    default IDeferredRegister<V> createDeferredRegister(String name) {
+        return createDeferredRegister(createKey(name), name);
+    }
+    
+    default IDeferredRegister<V> createDeferredRegister() {
+        return createDeferredRegister(Key.EMPTY, "");
     }
     
     Set<Map.Entry<Key, V>> entrySet();
