@@ -14,6 +14,7 @@ import java.util.function.*;
  *
  * @param <V> The type that is registered
  */
+@SuppressWarnings("DuplicatedCode")
 public class HashRegistry<V> implements IRegistry<V> {
     
     protected final Key key;
@@ -326,6 +327,40 @@ public class HashRegistry<V> implements IRegistry<V> {
     @Override
     public IDeferredRegister<V> createDeferredRegister(Key key, String name) {
         return new DeferredRegisterer(key, name);
+    }
+    
+    @Override
+    public RegisterResult<V> register(RegistryHolder<V> holder) {
+        V object = holder.get();
+        Key key = holder.getKey();
+        if (isFrozen()) {
+            return new RegisterResult.Frozen<>(this, key, object);
+        }
+        
+        V existing = this.backingMap.get(key);
+        
+        if (Objects.equals(object, existing)) {
+            return new RegisterResult.AlreadyRegistered<>(holders.get(key));
+        } else if (existing != null && !hasFlag(RegistryFlag.REPLACING)) {
+            return new RegisterResult.ReplaceNotAllowed<>(this, key, object, existing);
+        }
+        
+        RegisterEvent<V> event = this.dispatcher.dispatch(new RegisterEvent<>(this, key, object, existing));
+        
+        if (event.isCancelled()) {
+            return new RegisterResult.EventCancelled<>(this, key, object, existing);
+        }
+        
+        this.backingMap.put(key, object);
+        this.holders.put(key, holder);
+        
+        if (object instanceof Keyable keyable) {
+            if (keyable.supportsSettingKey()) {
+                keyable.setKey(key);
+            }
+        }
+        
+        return new RegisterResult.Success<>(holder);
     }
     
     @Override
