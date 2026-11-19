@@ -21,6 +21,11 @@ public interface IRegister<V> extends Nameable, Keyable {
         return register(createKey(key, object), object);
     }
     
+    default RegistryHolder<V> register(String key, Function<Key, V> function) {
+        Key k = createKey(key);
+        return register(k, function);
+    }
+    
     IRegistry<V> getRegistry();
     
     Collection<RegistryHolder<V>> getEntries();
