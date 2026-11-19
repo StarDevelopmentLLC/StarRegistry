@@ -4,7 +4,6 @@ import com.stardevllc.registry.holder.RegistryHolder;
 import com.stardevllc.starlib.objects.Nameable;
 import com.stardevllc.starlib.objects.key.Key;
 import com.stardevllc.starlib.objects.key.Keyable;
-import com.stardevllc.starlib.objects.key.impl.StringKey;
 
 import java.util.Collection;
 import java.util.function.Function;
@@ -63,10 +62,10 @@ public interface IRegister<V> extends Nameable, Keyable {
     Collection<RegistryHolder<V>> getEntries();
     
     default Key createKey(String k, V value) {
-        return new StringKey(k);
+        return getRegistry().createKey(k, value);
     }
     
     default Key createKey(String k) {
-        return new StringKey(k);
+        return getRegistry().createKey(k);
     }
 }

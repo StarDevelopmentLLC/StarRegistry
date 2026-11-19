@@ -1,10 +1,9 @@
 package com.stardevllc.registry;
 
 import com.stardevllc.registry.holder.DeferredHolder;
-import com.stardevllc.registry.holder.RegistryHolder;
 import com.stardevllc.registry.result.RegisterResult;
 import com.stardevllc.starlib.objects.key.Key;
-import com.stardevllc.starlib.objects.key.Keys;
+import com.stardevllc.starlib.objects.key.impl.StringKey;
 
 import java.util.Collection;
 import java.util.function.Function;
@@ -68,6 +67,10 @@ public interface IDeferredRegister<V> {
     Collection<RegisterResult<V>> getResults();
     
     default Key createKey(String k) {
-        return Keys.of(k);
+        if (getRegistry() != null) {
+            return getRegistry().createKey(k);
+        }
+        
+        return new StringKey(IRegistry.KEY_NORMALIZER.apply(k));
     }
 }
