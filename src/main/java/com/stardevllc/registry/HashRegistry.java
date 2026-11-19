@@ -30,13 +30,18 @@ public class HashRegistry<V> implements IRegistry<V> {
     
     protected boolean frozen;
     
-    public HashRegistry() {
-        this(Key.EMPTY, "");
+    public HashRegistry(RegistryFlag... flags) {
+        this(Key.EMPTY, "", flags);
+        
     }
     
-    public HashRegistry(Key key, String name) {
+    public HashRegistry(Key key, String name, RegistryFlag... flags) {
         this.key = key;
         this.name = name;
+        
+        if (flags != null) {
+            this.flags.addAll(List.of(flags));
+        }
     }
     
     @Override
