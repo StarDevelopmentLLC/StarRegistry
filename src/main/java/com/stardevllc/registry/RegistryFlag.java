@@ -36,12 +36,12 @@ public enum RegistryFlag {
     CHECK_PARTIAL_IN_GET,
     
     /**
-     * This flag being present means that {@link IRegisterer}s created by the {@link IRegistry#createRegisterer(Key, String)} methods can bypass the frozen flag
+     * This flag being present means that {@link IRegister}s created by the {@link IRegistry#createRegister(Key, String)} methods can bypass the frozen flag
      */
     ALLOW_REGISTERERS_BYPASS_FROZEN,
     
     /**
-     * This flag being present means that {@link IRegisterer}s created by the {@link IRegistry#createRegisterer(Key, String)} methods can bypass the replacing flag
+     * This flag being present means that {@link IRegister}s created by the {@link IRegistry#createRegister(Key, String)} methods can bypass the replacing flag
      */
     ALLOW_REGISTERERS_BYPASS_REPLACING
 }

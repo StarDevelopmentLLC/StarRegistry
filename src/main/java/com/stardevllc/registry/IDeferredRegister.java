@@ -10,7 +10,7 @@ import java.util.Collection;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public interface IDeferredRegisterer<V> {
+public interface IDeferredRegister<V> {
     
     DeferredHolder<V> register(Key key, Supplier<V> supplier);
     

@@ -101,11 +101,11 @@ public interface IRegistry<V> extends Iterable<V>, Nameable, Keyable, Function<K
         return size() > 0;
     }
     
-    default IRegisterer<V> createRegisterer(Key key, String name) {
+    default IRegister<V> createRegister(Key key, String name) {
         throw new UnsupportedOperationException();
     }
     
-    default IDeferredRegisterer<V> createDeferredRegisterer(Key key, String name) {
+    default IDeferredRegister<V> createDeferredRegister(Key key, String name) {
         throw new UnsupportedOperationException();
     }
     

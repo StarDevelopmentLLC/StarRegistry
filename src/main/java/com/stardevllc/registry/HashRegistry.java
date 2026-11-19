@@ -64,7 +64,7 @@ public class HashRegistry<V> implements IRegistry<V> {
         return v;
     }
     
-    private final class Registerer implements IRegisterer<V> {
+    private final class Registerer implements IRegister<V> {
         
         private final Key key;
         private final String name;
@@ -168,12 +168,12 @@ public class HashRegistry<V> implements IRegistry<V> {
         }
     }
     
-    public IRegisterer<V> createRegisterer(Key key, String name) {
+    public IRegister<V> createRegister(Key key, String name) {
         return new Registerer(key, name);
     }
     
     @SuppressWarnings("DuplicatedCode")
-    private final class DeferredRegisterer implements IDeferredRegisterer<V> {
+    private final class DeferredRegisterer implements IDeferredRegister<V> {
         
         private final Key key;
         private final String name;
@@ -324,7 +324,7 @@ public class HashRegistry<V> implements IRegistry<V> {
     }
     
     @Override
-    public IDeferredRegisterer<V> createDeferredRegisterer(Key key, String name) {
+    public IDeferredRegister<V> createDeferredRegister(Key key, String name) {
         return new DeferredRegisterer(key, name);
     }
     

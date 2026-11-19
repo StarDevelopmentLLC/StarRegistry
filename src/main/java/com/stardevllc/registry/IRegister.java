@@ -9,7 +9,7 @@ import com.stardevllc.starlib.objects.key.impl.StringKey;
 import java.util.Collection;
 import java.util.function.Function;
 
-public interface IRegisterer<V> extends Nameable, Keyable {
+public interface IRegister<V> extends Nameable, Keyable {
     
     RegistryHolder<V> register(Key key, Function<Key, V> function);
     
