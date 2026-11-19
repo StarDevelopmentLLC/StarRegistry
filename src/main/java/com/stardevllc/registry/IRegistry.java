@@ -63,7 +63,11 @@ public interface IRegistry<V> extends Iterable<V>, Nameable, Keyable, Function<K
     }
     
     default <CV extends V> IRegistry<CV> createChild(Key key, String name) {
-        return null;
+        throw new UnsupportedOperationException();
+    }
+    
+    default <CV extends V> IRegistry<CV> createChild(String name) {
+        return createChild(createKey(name), name);
     }
     
     default IRegistry<? super V> getParent() {
