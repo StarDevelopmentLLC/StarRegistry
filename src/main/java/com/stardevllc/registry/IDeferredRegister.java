@@ -20,6 +20,11 @@ public interface IDeferredRegister<V> {
         return register(createKey(key), supplier);
     }
     
+    default DeferredHolder<V> register(String key, Function<Key, V> supplierFunction) {
+        Key k = createKey(key);
+        return register(k, supplierFunction);
+    }
+    
     IRegistry<V> getRegistry();
     
     void registerEntries();
