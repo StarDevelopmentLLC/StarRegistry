@@ -71,8 +71,8 @@ public class HashRegistry<V> implements IRegistry<V> {
         private final Map<Key, RegistryHolder<V>> holders = new HashMap<>();
         
         public Registerer(Key key, String name) {
-            this.key = key;
-            this.name = name;
+            this.key = key != null ? key : Key.EMPTY;
+            this.name = name != null ? name : "";
         }
         
         @Override
@@ -183,8 +183,8 @@ public class HashRegistry<V> implements IRegistry<V> {
         private boolean hasRegisteredEntries;
         
         public DeferredRegisterer(Key key, String name) {
-            this.key = key;
-            this.name = name;
+            this.key = key != null ? key : Key.EMPTY;
+            this.name = name != null ? name : "";
         }
         
         @Override
