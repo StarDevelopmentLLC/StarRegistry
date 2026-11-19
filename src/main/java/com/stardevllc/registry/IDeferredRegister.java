@@ -12,6 +12,38 @@ import java.util.function.Supplier;
 
 public interface IDeferredRegister<V> {
     
+    static <V> IDeferredRegister<V> create(IRegistry<V> registry, Key key, String name) {
+        try {
+            return registry.createDeferredRegister(key, name);
+        } catch (Exception e) {
+            return new SimpleDeferredRegister<>(registry, key, name);
+        }
+    }
+    
+    static <V> IDeferredRegister<V> create(IRegistry<V> registry, String key, String name) {
+        try {
+            return registry.createDeferredRegister(key, name);
+        } catch (Exception e) {
+            return new SimpleDeferredRegister<>(registry, registry.createKey(key), name);
+        }
+    }
+    
+    static <V> IDeferredRegister<V> create(IRegistry<V> registry, String name) {
+        try {
+            return registry.createDeferredRegister(name);
+        } catch (Exception e) {
+            return new SimpleDeferredRegister<>(registry, registry.createKey(name), name);
+        }
+    }
+    
+    static <V> IDeferredRegister<V> create(IRegistry<V> registry) {
+        try {
+            return registry.createDeferredRegister();
+        } catch (Exception e) {
+            return new SimpleDeferredRegister<>(registry, Key.EMPTY, "");
+        }
+    }
+    
     DeferredHolder<V> register(Key key, Supplier<V> supplier);
     
     DeferredHolder<V> register(Key key, Function<Key, V> supplierFunction);
