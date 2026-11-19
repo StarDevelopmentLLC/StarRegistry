@@ -33,4 +33,8 @@ public sealed interface UnregisterResult<V> {
     record NotAllowed<V>(IRegistry<V> registry, Key key, V value) implements UnregisterResult<V> {
         
     }
+    
+    record Unsupported<V>(IRegistry<V> registry, Key key, V value) implements UnregisterResult<V> {
+        
+    }
 }

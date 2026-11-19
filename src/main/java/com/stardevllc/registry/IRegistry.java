@@ -81,7 +81,9 @@ public interface IRegistry<V> extends Iterable<V>, Nameable, Keyable, Function<K
         getDispatcher().addListener(listener);
     }
     
-    UnregisterResult<V> unregister(Key key);
+    default UnregisterResult<V> unregister(Key key) {
+        return new UnregisterResult.Unsupported<>(this, key, get(key));
+    }
     
     default UnregisterResult<V> unregister(String key) {
         return unregister(createKey(key));
