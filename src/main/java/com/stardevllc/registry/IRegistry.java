@@ -13,6 +13,9 @@ import java.util.*;
 import java.util.function.*;
 
 public interface IRegistry<V> extends Iterable<V>, Nameable, Keyable, Function<Key, V> {
+    
+    Function<String, String> KEY_NORMALIZER = s -> s.replaceAll("[^a-zA-Z0-9]", "").replace(" ", "_").toLowerCase();
+    
     V get(Key key);
     
     default V get(String key) {
@@ -127,7 +130,7 @@ public interface IRegistry<V> extends Iterable<V>, Nameable, Keyable, Function<K
      * @return The key
      */
     default Key createKey(String k, V value) {
-        return new StringKey(k);
+        return new StringKey(KEY_NORMALIZER.apply(k));
     }
     
     /**
@@ -137,7 +140,7 @@ public interface IRegistry<V> extends Iterable<V>, Nameable, Keyable, Function<K
      * @return The key instance
      */
     default Key createKey(String k) {
-        return new StringKey(k);
+        return new StringKey(KEY_NORMALIZER.apply(k));
     }
     
     boolean containsKey(Key key);
