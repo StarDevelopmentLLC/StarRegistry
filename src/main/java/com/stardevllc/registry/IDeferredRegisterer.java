@@ -7,11 +7,14 @@ import com.stardevllc.starlib.objects.key.Key;
 import com.stardevllc.starlib.objects.key.Keys;
 
 import java.util.Collection;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 public interface IDeferredRegisterer<V> {
     
     DeferredHolder<V> register(Key key, Supplier<V> supplier);
+    
+    DeferredHolder<V> register(Key key, Function<Key, V> supplierFunction);
     
     default RegistryHolder<V> register(String key, Supplier<V> supplier) {
         return register(createKey(key), supplier);

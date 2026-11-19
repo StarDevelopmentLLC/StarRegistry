@@ -169,6 +169,7 @@ public class HashRegistry<V> implements IRegistry<V> {
         return new Registerer(key, name);
     }
     
+    @SuppressWarnings("DuplicatedCode")
     private final class DeferredRegisterer implements IDeferredRegisterer<V> {
         
         private final Key key;
@@ -199,6 +200,21 @@ public class HashRegistry<V> implements IRegistry<V> {
         }
         
         @Override
+        public DeferredHolder<V> register(Key key, Function<Key, V> supplierFunction) {
+            if (hasRegisteredEntries) {
+                throw new IllegalStateException("Cannot register new entries when a DeferredRegister has already registered entries");
+            }
+            
+            if (holders.containsKey(key)) {
+                return holders.get(key);
+            }
+            
+            DeferredHolder<V> holder = new DeferredHolder<>(HashRegistry.this, key, supplierFunction);
+            this.holders.put(key, holder);
+            return holder;
+        }
+        
+        @Override
         public IRegistry<V> getRegistry() {
             return HashRegistry.this;
         }
@@ -212,7 +228,7 @@ public class HashRegistry<V> implements IRegistry<V> {
             for (Map.Entry<Key, DeferredHolder<V>> entry : this.holders.entrySet()) {
                 Key key = entry.getKey();
                 DeferredHolder<V> holder = entry.getValue();
-                V object = holder.getSupplier().get();
+                V object = holder.get();
                 if (isFrozen() && !hasFlag(RegistryFlag.ALLOW_REGISTERERS_BYPASS_FROZEN)) {
                     results.put(key, new RegisterResult.Frozen<>(HashRegistry.this, key, object));
                     continue;
