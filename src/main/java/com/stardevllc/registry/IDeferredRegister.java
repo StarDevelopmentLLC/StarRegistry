@@ -48,7 +48,7 @@ public interface IDeferredRegister<V> {
     
     DeferredHolder<V> register(Key key, Function<Key, V> supplierFunction);
     
-    default RegistryHolder<V> register(String key, Supplier<V> supplier) {
+    default DeferredHolder<V> register(String key, Supplier<V> supplier) {
         return register(createKey(key), supplier);
     }
     
