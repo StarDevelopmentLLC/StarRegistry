@@ -24,7 +24,7 @@ public class DeferredHolder<T> extends RegistryHolder<T> {
         this.supplierFunction = supplierFunction;
     }
     
-    public T get() {
+    public T create() {
         if (this.supplierFunction != null) {
             return this.supplierFunction.apply(key());
         } else if (this.supplier != null) {

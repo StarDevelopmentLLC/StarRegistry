@@ -228,7 +228,7 @@ public class HashRegistry<V> implements IRegistry<V> {
             for (Map.Entry<Key, DeferredHolder<V>> entry : this.holders.entrySet()) {
                 Key key = entry.getKey();
                 DeferredHolder<V> holder = entry.getValue();
-                V object = holder.get();
+                V object = holder.create();
                 if (isFrozen() && !hasFlag(RegistryFlag.ALLOW_REGISTERERS_BYPASS_FROZEN)) {
                     results.put(key, new RegisterResult.Frozen<>(HashRegistry.this, key, object));
                     continue;
