@@ -78,7 +78,7 @@ public class HashRegistry<V> implements IRegistry<V> {
         
         @Override
         public RegistryHolder<V> register(Key key, Function<Key, V> function) {
-            if (isFrozen() && !hasFlag(RegistryFlag.ALLOW_REGISTERERS_BYPASS_FROZEN)) {
+            if (isFrozen() && !hasFlag(RegistryFlag.ALLOW_REGISTERS_BYPASS_FROZEN)) {
                 throw new UnsupportedOperationException();
             }
             
@@ -88,7 +88,7 @@ public class HashRegistry<V> implements IRegistry<V> {
             
             if (Objects.equals(object, existing)) {
                 return holders.get(key);
-            } else if (existing != null && !hasFlag(RegistryFlag.REPLACING) && !hasFlag(RegistryFlag.ALLOW_REGISTERERS_BYPASS_REPLACING)) {
+            } else if (existing != null && !hasFlag(RegistryFlag.REPLACING) && !hasFlag(RegistryFlag.ALLOW_REGISTERS_BYPASS_REPLACING)) {
                 throw new UnsupportedOperationException();
             }
             
@@ -233,7 +233,7 @@ public class HashRegistry<V> implements IRegistry<V> {
                 Key key = entry.getKey();
                 DeferredHolder<V> holder = entry.getValue();
                 V object = holder.create();
-                if (isFrozen() && !hasFlag(RegistryFlag.ALLOW_REGISTERERS_BYPASS_FROZEN)) {
+                if (isFrozen() && !hasFlag(RegistryFlag.ALLOW_REGISTERS_BYPASS_FROZEN)) {
                     results.put(key, new RegisterResult.Frozen<>(HashRegistry.this, key, object));
                     continue;
                 }
@@ -243,7 +243,7 @@ public class HashRegistry<V> implements IRegistry<V> {
                 if (Objects.equals(object, existing)) {
                     results.put(key, new RegisterResult.AlreadyRegistered<>(holder));
                     continue;
-                } else if (existing != null && !hasFlag(RegistryFlag.REPLACING) && !hasFlag(RegistryFlag.ALLOW_REGISTERERS_BYPASS_REPLACING)) {
+                } else if (existing != null && !hasFlag(RegistryFlag.REPLACING) && !hasFlag(RegistryFlag.ALLOW_REGISTERS_BYPASS_REPLACING)) {
                     results.put(key, new RegisterResult.ReplaceNotAllowed<>(HashRegistry.this, key, object, existing));
                     continue;
                 }

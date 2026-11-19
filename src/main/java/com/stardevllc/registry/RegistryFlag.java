@@ -26,11 +26,6 @@ public enum RegistryFlag {
     UNREGISTERING,
     
     /**
-     * This flag being present means that the bulk clear action can be performed
-     */
-    CLEARING,
-    
-    /**
      * This flag being present means that the registry will check partial keys in the get method
      */
     CHECK_PARTIAL_IN_GET,
@@ -38,10 +33,10 @@ public enum RegistryFlag {
     /**
      * This flag being present means that {@link IRegister}s created by the {@link IRegistry#createRegister(Key, String)} methods can bypass the frozen flag
      */
-    ALLOW_REGISTERERS_BYPASS_FROZEN,
+    ALLOW_REGISTERS_BYPASS_FROZEN,
     
     /**
      * This flag being present means that {@link IRegister}s created by the {@link IRegistry#createRegister(Key, String)} methods can bypass the replacing flag
      */
-    ALLOW_REGISTERERS_BYPASS_REPLACING
+    ALLOW_REGISTERS_BYPASS_REPLACING
 }
