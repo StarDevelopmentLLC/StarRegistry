@@ -13,8 +13,8 @@ import java.util.Objects;
  * @param <T> The Object Type
  */
 public class RegistryHolder<T> implements Holder<Key, T>, Pair<Key, T> {
-    private final IRegistry<T> registry;
-    private final Key key;
+    protected final IRegistry<T> registry;
+    protected final Key key;
     
     public RegistryHolder(IRegistry<T> registry, Key key) {
         this.registry = registry;
