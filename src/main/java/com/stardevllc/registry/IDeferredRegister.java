@@ -73,10 +73,6 @@ public interface IDeferredRegister<V> {
     Collection<RegisterResult<V>> getResults();
     
     default Key createKey(String k) {
-        if (getRegistry() != null) {
-            return getRegistry().createKey(k);
-        }
-        
-        return new StringKey(IRegistry.KEY_NORMALIZER.apply(k));
+        return getRegistry().createKey(k);
     }
 }
