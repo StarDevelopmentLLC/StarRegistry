@@ -2,6 +2,7 @@ package com.stardevllc.registry;
 
 import com.stardevllc.registry.event.*;
 import com.stardevllc.registry.event.EventListener;
+import com.stardevllc.registry.holder.DeferredHolder;
 import com.stardevllc.registry.holder.RegistryHolder;
 import com.stardevllc.registry.result.*;
 import com.stardevllc.starlib.event.EventDispatcher;
@@ -36,7 +37,7 @@ public interface IRegistry<V> extends Iterable<V>, Nameable, Keyable, Function<K
         return register(createKey(key, object), object);
     }
     
-    RegisterResult<V> register(RegistryHolder<V> holder);
+    RegisterResult<V> register(DeferredHolder<V> holder);
     
     default void addRegisterListener(EventListener<V, RegisterEvent<V>> listener) {
         getDispatcher().addListener(listener);

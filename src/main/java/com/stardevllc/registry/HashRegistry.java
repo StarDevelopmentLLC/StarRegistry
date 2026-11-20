@@ -334,8 +334,8 @@ public class HashRegistry<V> implements IRegistry<V> {
     }
     
     @Override
-    public RegisterResult<V> register(RegistryHolder<V> holder) {
-        V object = holder.get();
+    public RegisterResult<V> register(DeferredHolder<V> holder) {
+        V object = holder.create();
         Key key = holder.getKey();
         if (isFrozen()) {
             return new RegisterResult.Frozen<>(this, key, object);
