@@ -14,7 +14,7 @@ import java.util.function.*;
 
 public interface IRegistry<V> extends Iterable<V>, Nameable, Keyable, Function<Key, V> {
     
-    Function<String, String> KEY_NORMALIZER = s -> s.replaceAll("[^a-zA-Z0-9]", "").replace(" ", "_").toLowerCase();
+    Function<String, String> KEY_NORMALIZER = s -> s.replace(" ", "_").replaceAll("[^a-zA-Z0-9]", "").toLowerCase();
     
     V get(Key key);
     
