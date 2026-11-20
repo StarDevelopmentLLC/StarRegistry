@@ -78,8 +78,9 @@ public class HashRegistry<V> implements IRegistry<V> {
         
         @Override
         public RegistryHolder<V> register(Key key, Function<Key, V> function) {
+            RegistryHolder<V> holder = new RegistryHolder<>(HashRegistry.this, key);
             if (isFrozen() && !hasFlag(RegistryFlag.ALLOW_REGISTERS_BYPASS_FROZEN)) {
-                throw new UnsupportedOperationException();
+                return holder;
             }
             
             V existing = backingMap.get(key);
@@ -89,10 +90,9 @@ public class HashRegistry<V> implements IRegistry<V> {
             if (Objects.equals(object, existing)) {
                 return holders.get(key);
             } else if (existing != null && !hasFlag(RegistryFlag.REPLACING) && !hasFlag(RegistryFlag.ALLOW_REGISTERS_BYPASS_REPLACING)) {
-                throw new UnsupportedOperationException();
+                return holder;
             }
             
-            RegistryHolder<V> holder = new RegistryHolder<>(HashRegistry.this, key);
             backingMap.put(key, object);
             HashRegistry.this.holders.put(key, holder);
             this.holders.put(key, holder);
