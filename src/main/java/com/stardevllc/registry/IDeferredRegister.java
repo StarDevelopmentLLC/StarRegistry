@@ -3,7 +3,6 @@ package com.stardevllc.registry;
 import com.stardevllc.registry.holder.DeferredHolder;
 import com.stardevllc.registry.result.RegisterResult;
 import com.stardevllc.starlib.objects.key.Key;
-import com.stardevllc.starlib.objects.key.impl.StringKey;
 
 import java.util.Collection;
 import java.util.function.Function;
@@ -47,13 +46,20 @@ public interface IDeferredRegister<V> {
     
     DeferredHolder<V> register(Key key, Function<Key, V> supplierFunction);
     
+    default DeferredHolder<V> register(Key key, V value) {
+        return register(key, () -> value);
+    }
+    
+    default DeferredHolder<V> register(String key, V value) {
+        return register(createKey(key), () -> value);
+    }
+    
     default DeferredHolder<V> register(String key, Supplier<V> supplier) {
         return register(createKey(key), supplier);
     }
     
     default DeferredHolder<V> register(String key, Function<Key, V> supplierFunction) {
-        Key k = createKey(key);
-        return register(k, supplierFunction);
+        return register(createKey(key), supplierFunction);
     }
     
     IRegistry<V> getRegistry();
