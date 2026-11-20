@@ -65,13 +65,13 @@ public class HashRegistry<V> implements IRegistry<V> {
         return v;
     }
     
-    private final class Registerer implements IRegister<V> {
+    private final class Register implements IRegister<V> {
         
         private final Key key;
         private final String name;
         private final Map<Key, RegistryHolder<V>> holders = new HashMap<>();
         
-        public Registerer(Key key, String name) {
+        public Register(Key key, String name) {
             this.key = key != null ? key : Key.EMPTY;
             this.name = name != null ? name : "";
         }
@@ -134,7 +134,7 @@ public class HashRegistry<V> implements IRegistry<V> {
             
             @Override
             public Iterator<RegistryHolder<V>> iterator() {
-                return new Registerer.EntryItr();
+                return new Register.EntryItr();
             }
             
             @Override
@@ -170,11 +170,11 @@ public class HashRegistry<V> implements IRegistry<V> {
     }
     
     public IRegister<V> createRegister(Key key, String name) {
-        return new Registerer(key, name);
+        return new Register(key, name);
     }
     
     @SuppressWarnings("DuplicatedCode")
-    private final class DeferredRegisterer implements IDeferredRegister<V> {
+    private final class DeferredRegister implements IDeferredRegister<V> {
         
         private final Key key;
         private final String name;
@@ -183,7 +183,7 @@ public class HashRegistry<V> implements IRegistry<V> {
         
         private boolean hasRegisteredEntries;
         
-        public DeferredRegisterer(Key key, String name) {
+        public DeferredRegister(Key key, String name) {
             this.key = key != null ? key : Key.EMPTY;
             this.name = name != null ? name : "";
         }
@@ -290,7 +290,7 @@ public class HashRegistry<V> implements IRegistry<V> {
             
             @Override
             public Iterator<DeferredHolder<V>> iterator() {
-                return new DeferredRegisterer.EntryItr();
+                return new DeferredRegister.EntryItr();
             }
             
             @Override
@@ -330,7 +330,7 @@ public class HashRegistry<V> implements IRegistry<V> {
     
     @Override
     public IDeferredRegister<V> createDeferredRegister(Key key, String name) {
-        return new DeferredRegisterer(key, name);
+        return new DeferredRegister(key, name);
     }
     
     @Override
