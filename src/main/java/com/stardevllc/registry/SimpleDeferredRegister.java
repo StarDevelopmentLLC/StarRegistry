@@ -70,7 +70,12 @@ class SimpleDeferredRegister<V> implements IDeferredRegister<V> {
             Key key = entry.getKey();
             DeferredHolder<V> holder = entry.getValue();
             
+            if (holder.hasBeenRegistered()) {
+                continue;
+            }
+            
             RegisterResult<V> result = registry.register(holder);
+            holder.markRegistered();
             results.put(key, result);
         }
         

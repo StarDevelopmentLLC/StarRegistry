@@ -26,25 +26,16 @@ public class DeferredHolder<T> extends RegistryHolder<T> {
         this.supplierFunction = supplierFunction;
     }
     
-    @Override
-    public T get() {
-        if (hasBeenRegistered) {
-            return super.get();
-        }
-        
-        if (object != null) {
-            return object;
-        }
-        
-        return create();
-    }
-    
     public T create() {
         if (this.object == null) {
-            if (this.supplierFunction != null) {
-                return this.object = this.supplierFunction.apply(key());
-            } else if (this.supplier != null) {
-                return this.object = this.supplier.get();
+            if (!hasBeenRegistered) {
+                if (this.supplierFunction != null) {
+                    return this.object = this.supplierFunction.apply(key());
+                } else if (this.supplier != null) {
+                    return this.object = this.supplier.get();
+                }
+            } else {
+                return super.value();
             }
         }
         
@@ -57,5 +48,20 @@ public class DeferredHolder<T> extends RegistryHolder<T> {
     
     public void markRegistered() {
         this.hasBeenRegistered = true;
+        if (this.object != null) {
+            this.object = null;
+        }
+    }
+    
+    @Override
+    public String toString() {
+        return "DeferredHolder{" +
+                "registry=" + registry +
+                ", key=" + key +
+                ", hasBeenRegistered=" + hasBeenRegistered +
+                ", supplier=" + supplier +
+                ", supplierFunction=" + supplierFunction +
+                ", object=" + object +
+                '}';
     }
 }
