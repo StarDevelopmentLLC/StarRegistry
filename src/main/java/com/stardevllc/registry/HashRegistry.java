@@ -33,7 +33,6 @@ public class HashRegistry<V> implements IRegistry<V> {
     
     public HashRegistry(RegistryFlag... flags) {
         this(Key.EMPTY, "", flags);
-        
     }
     
     public HashRegistry(Key key, String name, RegistryFlag... flags) {
@@ -590,8 +589,6 @@ public class HashRegistry<V> implements IRegistry<V> {
         public IRegistry<? super CV> getParent() {
             return parent;
         }
-        
-        
         
         @Override
         public boolean hasFlag(RegistryFlag flag) {

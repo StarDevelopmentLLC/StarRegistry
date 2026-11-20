@@ -4,6 +4,7 @@ import com.stardevllc.registry.IRegistry;
 import com.stardevllc.registry.holder.RegistryHolder;
 import com.stardevllc.starlib.objects.key.Key;
 
+//TODO Make this have some Optional style methods
 public sealed interface RegisterResult<V> {
     
     IRegistry<V> registry();

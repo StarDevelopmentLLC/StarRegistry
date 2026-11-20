@@ -38,5 +38,8 @@ public enum RegistryFlag {
     /**
      * This flag being present means that {@link IRegister}s created by the {@link IRegistry#createRegister(Key, String)} methods can bypass the replacing flag
      */
-    ALLOW_REGISTERS_BYPASS_REPLACING
+    ALLOW_REGISTERS_BYPASS_REPLACING, 
+    
+    //TODO
+    ONLY_ALLOW_REGISTRATION_THROUGH_REGISTERS
 }
